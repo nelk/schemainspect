@@ -291,6 +291,7 @@ class InspectedSelectable(Inspected):
         partition_def=None,
         rowsecurity=False,
         forcerowsecurity=False,
+        reloptions=[],
         persistence=None,
     ):
         self.name = name
@@ -310,6 +311,7 @@ class InspectedSelectable(Inspected):
         self.partition_def = partition_def
         self.rowsecurity = rowsecurity
         self.forcerowsecurity = forcerowsecurity
+        self.reloptions = reloptions
         self.persistence = persistence
 
     def __eq__(self, other):

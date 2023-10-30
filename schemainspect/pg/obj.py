@@ -108,8 +108,13 @@ class InspectedSelectable(BaseInspectedSelectable):
                     self.persistence_modifier, n, self.parent_table, self.partition_def
                 )
         elif self.relationtype == "v":
-            create_statement = "create or replace view {} as {}\n".format(
-                n, self.definition
+            options_statement = (
+                len(self.reloptions) > 0
+                and "with ({})".format(", ".join(self.reloptions))
+                or ""
+            )
+            create_statement = "create or replace view {} {} as {}\n".format(
+                n, options_statement, self.definition
             )
         elif self.relationtype == "m":
             create_statement = "create materialized view {} as {}\n".format(
@@ -1438,6 +1443,7 @@ class PostgreSQL(DBInspector):
                 partition_def=f.partition_def,
                 rowsecurity=f.rowsecurity,
                 forcerowsecurity=f.forcerowsecurity,
+                reloptions=f.reloptions,
                 persistence=f.persistence,
             )
             RELATIONTYPES = {

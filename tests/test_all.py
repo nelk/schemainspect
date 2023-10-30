@@ -75,6 +75,15 @@ VDEF = """create or replace view "public"."v_films" as  SELECT films.code,
     films.drange
    FROM films;
 """
+V_INVOKER_DEF = """create or replace view "public"."v_films" WITH (security_invoker=true) as  SELECT films.code,
+    films.title,
+    films.did,
+    films.date_prod,
+    films.kind,
+    films.len,
+    films.drange
+   FROM films;
+"""
 MVDEF = """create materialized view "public"."mv_films" as  SELECT films.code,
     films.title,
     films.did,
@@ -267,6 +276,9 @@ def setup_pg_schema(s):
         """
     )
     s.execute(
+        """CREATE VIEW v_films3 WITH (security_invoker=true) AS (select * from films)"""
+    )
+    s.execute(
         """
             CREATE or replace FUNCTION films_f(d date,
             def_t text default null,
@@ -355,9 +367,10 @@ def asserts_pg(i, has_timescale=False):
     films = n("films")
     v_films = n("v_films")
     v_films2 = n("v_films2")
+    v_films3 = n("v_films3")
     v = i.views[v_films]
     public_views = od((k, v) for k, v in i.views.items() if v.schema == "public")
-    assert list(public_views.keys()) == [v_films, v_films2]
+    assert list(public_views.keys()) == [v_films, v_films2, vfilms3]
     assert v.columns == FILMS_COLUMNS
     assert v.create_statement == VDEF
     assert v == v
@@ -369,6 +382,10 @@ def asserts_pg(i, has_timescale=False):
     assert v.dependent_on == [films]
     v = i.views[v_films2]
     assert v.dependent_on == [v_films]
+
+    # view security invoker
+    v = i.views[v_films3]
+    assert v.create_statement == V_INVOKER_DEF
 
     for k, r in i.relations.items():
         for dependent in r.dependents:
